@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# opencode-evidence local stores (evidence must not become committed source)
+.evidence/
+.opencode-evidence/
