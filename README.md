@@ -164,3 +164,15 @@ registration, and health structurally without inference.
 Truth engine, claim verifier, proof system, RAG, memory system, knowledge
 graph, authority engine, shell replacement, LLM judge, embeddings, remote
 upload, signing infrastructure. See `DESIGN.md` and `AGENTS.md`.
+
+## Capability provider
+
+- **Capability:** capturing observations as hash-pinned, provenance-bearing EvidenceRecords.
+- **Interfaces:** OpenCode plugin: evidence_record, evidence_command, evidence_file, evidence_get, evidence_explain and evidence_health; no hooks. evidence_command records an already-observed result and never executes commands.
+- **Current maturity:** TESTED; live OpenCode runtime UNVERIFIED.
+- **Evidence:** Six test files; README records 50 tests and offline load/smoke checks. These were not rerun in this documentation pass.
+- **Known limitations:** EvidenceRecord != verdict; hash integrity != truth. Dedicated HTTP/Git constructors remain future work; structured observations and bounded record sizes are implemented.
+- **Used by:** opencode-verify and opencode-proof (pinned vendored contracts); opencode-work (local runtime adapter).
+- **Registry:** Language `planning/capability-providers/` (Language-side availability index; this repository is the source of truth for itself).
+- **Evidence snapshot:** Audited 2026-10-02 against commit 88cc2e67.
+  See repository history and current status for later changes.
