@@ -26,7 +26,7 @@
     "load-check": "bun src/dev-cli.ts load"
   },
   "dependencies": {
-    "@opencode/plugin": "^2.0.12"
+    "@opencode/plugin": "^2.0.22"
   },
   "devDependencies": {
     "@tsconfig/bun": "^1.0.10",
