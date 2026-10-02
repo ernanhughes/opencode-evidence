@@ -40,7 +40,7 @@ records that contain them (`EVIDENCE_VERDICT_FIELD`). A caller may store
 words like "claim" or "confidence" *inside* `observation` as inert data;
 the core never reads them as judgments.
 
-## Composition (future siblings, not this repo)
+## Composition (separate providers)
 
 ```text
 world/tool
@@ -75,6 +75,62 @@ Add the plugin to OpenCode:
 The package entry (`dist/index.js`) exports the plugin. Zero LLM inference
 is required at any point — capture, hashing, storage, and health are pure
 runtime work.
+
+For Windows, the built checkout URL is `file:///C:/Projects/opencode-evidence`.
+For Linux/WSL use its absolute checkout URL, such as
+`file:///home/<user>/projects/opencode-evidence`. These are **OpenCode 2** `plugins`
+entries; build `dist/index.js` before host loading. The following first-use
+example uses source modules and does not prove host loading.
+
+## First use: observe a real file
+
+Run from this source checkout after `bun install`. The PowerShell here-string
+below executes the existing tool directly with Bun; on Linux/WSL save its
+TypeScript body as `first-use.ts` in this checkout and run `bun run first-use.ts`.
+No OpenCode session, model or network is involved. Output stores are newly
+created temporary directories, printed for inspection. To keep that isolation,
+run without an `OPENCODE_*_DIR` store override (environment overrides take precedence).
+```powershell
+@'
+import {mkdtempSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {EvidenceClient} from "./src/client";
+import {EvidenceFileTool, EvidenceHealthTool} from "./src/tools";
+const root = mkdtempSync(join(tmpdir(), "evidence-docs-"));
+const client = new EvidenceClient(process.cwd(), {store_dir: root});
+const health = await EvidenceHealthTool(client).execute({}, undefined as never);
+console.log(health.content);
+const input = {path: "README.md", subject: "provider-readme", include_content: false};
+const result = JSON.parse((await EvidenceFileTool(client).execute(input, undefined as never)).content);
+if (!result.ok) throw new Error(result.error);
+console.log(JSON.stringify({input, store: client.storeDir, ...result}, null, 2));
+'@ | bun run -
+```
+
+Expected: `ok: true`, `record` with `schema: "opencode.evidence.v1"`, generated
+`evidence_id`, `kind: "file_observation"`, subject, observed file metadata/hash,
+source locator, `observed_at`, record `content_hash` and producer; plus stored
+`path` and `duplicate`. The input names the actual checkout README. No command
+is executed. File existence/hash observation is not a verdict about its contents.
+In a configured host invoke `evidence_file` with the same input; the host's
+configured store replaces this example's temporary store.
+
+**`evidence_command` never executes its command string.** It records values you
+already observed (`command`, `exit_code`, optional stdout/stderr/times/cwd).
+Only an external process runner can produce those observations. Exit 0 remains
+data, not task success. Caller-supplied text is not independently observed truth.
+
+## Health check and troubleshooting
+
+Call `evidence_health` with `{}`, or run `bun run health`. It reports version,
+schema, store location/writability and `model_inference: "none"`. Store probing
+creates/removes a sentinel; this is local readiness, not truth or host-load proof.
+
+- Tool absent: build `dist/index.js`, check the V2 `plugins` URL and restart; `bun run load-check` uses an offline host stub.
+- `exists: false` from `evidence_file` is a valid missing-file observation; check the path relative to the project before interpreting it.
+- `EVIDENCE_ID_COLLISION` rejects divergent bytes under one ID; retain the failure rather than rewriting the record. Store/config failures require a writable, correctly configured directory.
+- `EVIDENCE_VERDICT_FIELD`: remove verdict-shaped record fields; verification belongs to Verify.
 
 ## Tools
 
